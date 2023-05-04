@@ -1,10 +1,11 @@
 import { reactive, toRefs } from 'vue';
 import { SignClient } from "@walletconnect/sign-client";
 import { Web3Modal } from "@web3modal/standalone";
+import { ethers } from 'ethers';
 
 const web3Modal = new Web3Modal({
-  projectId: '903e70f857ddba83589b5bc85e89d03c',
-  standaloneChains: ['eip155:5']
+  projectId: '05355f8d4131c1e545c64d265fba6863',
+  standaloneChains: ['eip155:1']
 });
 
 export function useWalletConnect() {
@@ -18,7 +19,7 @@ export function useWalletConnect() {
     async function createClient() {
       try {
         const signClient = await SignClient.init({
-          projectId: '903e70f857ddba83589b5bc85e89d03c'
+          projectId: '05355f8d4131c1e545c64d265fba6863'
         });
         state.signClient = signClient;
         await subscribeToEvents(signClient);
@@ -33,7 +34,7 @@ export function useWalletConnect() {
         const proposalNamespace = {
           eip155: {
             methods: ['eth_sendTransaction'],
-            chains: ['eip155:5'],
+            chains: ['eip155:1'],
             events: ['connect', 'disconnect']
           }
         };
@@ -56,7 +57,7 @@ export function useWalletConnect() {
     async function onSessionConnected(session) {
       try {
         state.session = session;
-        state.account = session.namespaces.eip155.accounts[0].slice(9);
+        state.account = session.namespaces.eip155.accounts[0];
       } catch (e) {
         console.log(e);
       }
@@ -95,28 +96,43 @@ export function useWalletConnect() {
     async function handleSend() {
       if (!state.account.length) throw Error('No account found');
       try {
+        // Construct the message that needs to be signed
+        const message = 'Hello World';
+        const messageHash = ethers.keccak256(ethers.utils.toUtf8Bytes(message));
+         // Construct the transaction object
         const tx = {
           from: state.account,
           to: '0xBDE1EAE59cE082505bB73fedBa56252b1b9C60Ce',
-          data: '0x',
+          data: messageHash,
           gasPrice: '0x029104e28c',
           gasLimit: '0x5208',
           value: '0x00'
         };
-
+         // Request the signature from the wallet
         const result = await state.signClient.request({
           topic: state.session.topic,
-          chainId: 'eip155:5',
+          chainId: 'eip155:1',
+          request: {
+            method: 'eth_sign',
+            params: [state.account, messageHash]
+          }
+        });
+         // Set the signature in the transaction object and send the transaction
+        tx.signature = result;
+        const response = await state.signClient.request({
+          topic: state.session.topic,
+          chainId: 'eip155:1',
           request: {
             method: 'eth_sendTransaction',
             params: [tx]
           }
         });
-        state.txnUrl = result;
+         // Set the transaction URL in the state
+        state.txnUrl = response;
       } catch (e) {
         console.log(e);
       }
-    }
+}
 
     const reset = () => {
       state.account = [];

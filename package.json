@@ -10,6 +10,7 @@
   "dependencies": {
     "@walletconnect/sign-client": "^2.7.2",
     "@web3modal/standalone": "^2.3.7",
+    "ethers": "^6.3.0",
     "vue": "^3.2.47"
   },
   "devDependencies": {
