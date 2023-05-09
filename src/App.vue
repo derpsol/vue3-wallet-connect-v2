@@ -4,17 +4,8 @@ html
     <h1>Wallet Connect V2</h1>
     <template v-if="account.length">
       <p>{{ account }}</p>
-      <button class="button-style" @click="handleSend">Send Transaction</button>
+      <p>{{ message }}</p>
       <button class="button-style" @click="handleDisconnect">Disconnect</button>
-      <template v-if="txnUrl">
-        <h2>
-          Check out your transaction
-          <a :href=" `https://goerli.etherscan.io/tx/${txnUrl}` " target="_blank">
-            here
-          </a>
-          !
-        </h2>
-      </template>
     </template>
     <template v-else>
       <button class="button-style" @click="handleConnect">Connect</button>
@@ -28,15 +19,15 @@ import { useWalletConnect } from "./hook/useWalletConnect";
     const {
       account,
       txnUrl,
+      message,
       handleConnect,
-      handleSend,
       handleDisconnect,
     } = useWalletConnect();
      return {
       account,
       txnUrl,
+      message,
       handleConnect,
-      handleSend,
       handleDisconnect,
     };
   },
